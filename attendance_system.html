@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4e73df;
+            --secondary: #858796;
+            --success: #1cc88a;
+            --info: #36b9cc;
+            --warning: #f6c23e;
+            --danger: #e74a3b;
+            --light: #f8f9fc;
+            --dark: #5a5c69;
+        }
+        
+        body {
+            background-color: #f8f9fc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .login-card {
+            width: 400px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .system-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #e3e6f0;
+            font-weight: 600;
+            padding: 15px 20px;
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            padding: 10px 15px;
+            color: var(--secondary);
+            font-weight: 500;
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            background: transparent;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a5fc8;
+            border-color: #3a5fc8;
+        }
+        
+        .status-on-time {
+            color: var(--success);
+            font-weight: 600;
+        }
+        
+        .status-late {
+            color: var(--danger);
+            font-weight: 600;
+        }
+        
+        .dashboard-card {
+            transition: transform 0.3s;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .attendance-history {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container">
+        <div class="login-card">
+            <div class="card">
+                <div class="card-header text-center bg-primary text-white">
+                    <h4 class="mb-0">Attendance System Login</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Login as</label>
+                            <select class="form-select" id="role">
+                                <option value="student">Student</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                    </form>
+                    <div class="mt-3 text-center">
+                        <p class="mb-0"></p>
+                        <p class="small mb-1"></p>
+                        <p class="small"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Interface -->
+    <div id="system-interface" class="system-container d-none">
+        <!-- Header -->
+        <div class="header d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">Attendance System</h2>
+            <div>
+                <span id="user-info" class="me-3"></span>
+                <button id="logout-btn" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="admin-dashboard">
+            <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses" type="button" role="tab">Courses</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance" type="button" role="tab">Attendance Records</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="adminTabContent">
+                <div class="tab-pane fade show active" id="courses" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Manage Courses</span>
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addCourseModal">
+                                <i class="fas fa-plus me-1"></i>Add Course
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Course Name</th>
+                                            <th>Code</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="courses-list">
+                                        <!-- Courses will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="attendance" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <span>Filter Attendance Records</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label for="course-filter" class="form-label">Course</label>
+                                    <select class="form-select" id="course-filter">
+                                        <option value="">All Courses</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="year-level-filter" class="form-label">Year Level</label>
+                                    <select class="form-select" id="year-level-filter">
+                                        <option value="">All Year Levels</option>
+                                        <option value="1">1st Year</option>
+                                        <option value="2">2nd Year</option>
+                                        <option value="3">3rd Year</option>
+                                        <option value="4">4th Year</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="date-filter" class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="date-filter">
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Student ID</th>
+                                            <th>Name</th>
+                                            <th>Course</th>
+                                            <th>Year Level</th>
+                                            <th>Date</th>
+                                            <th>Time</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="attendance-list">
+                                        <!-- Attendance records will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Dashboard -->
+        <div id="student-dashboard">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Mark Attendance</h5>
+                            <button id="mark-attendance-btn" class="btn btn-primary mt-2">
+                                <i class="fas fa-check-circle me-1"></i>Mark Today's Attendance
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Attendance</h5>
+                            <h2 id="total-attendance" class="text-primary">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">On Time Percentage</h5>
+                            <h2 id="on-time-percentage" class="text-success">0%</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span>My Attendance History</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive attendance-history">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-attendance-list">
+                                <!-- Student's attendance records will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Course Modal -->
+    <div class="modal fade" id="addCourseModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Course</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-course-form">
+                        <div class="mb-3">
+                            <label for="course-name" class="form-label">Course Name</label>
+                            <input type="text" class="form-control" id="course-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="course-code" class="form-label">Course Code</label>
+                            <input type="text" class="form-control" id="course-code" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-course-btn">Save Course</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // OOP Implementation
+        class User {
+            constructor(username, password, role) {
+                this.username = username;
+                this.password = password;
+                this.role = role;
+            }
+
+            authenticate(inputUsername, inputPassword) {
+                return this.username === inputUsername && this.password === inputPassword;
+            }
+        }
+
+        class Student extends User {
+            constructor(username, password, name, studentId, course, yearLevel) {
+                super(username, password, 'student');
+                this.name = name;
+                this.studentId = studentId;
+                this.course = course;
+                this.yearLevel = yearLevel;
+                this.attendance = [];
+            }
+
+            markAttendance(time, date, status) {
+                this.attendance.push({
+                    date: date || new Date().toLocaleDateString(),
+                    time: time || new Date().toLocaleTimeString(),
+                    status: status || this._checkIfLate(time)
+                });
+                return this.attendance[this.attendance.length - 1];
+            }
+
+            _checkIfLate(time) {
+                const currentTime = time || new Date();
+                const hour = currentTime.getHours ? currentTime.getHours() : parseInt(time.split(':')[0]);
+                return hour >= 9 ? 'Late' : 'On Time';
+            }
+
+            getAttendanceHistory() {
+                return this.attendance;
+            }
+
+            getTotalAttendance() {
+                return this.attendance.length;
+            }
+
+            getOnTimePercentage() {
+                if (this.attendance.length === 0) return 0;
+                const onTimeCount = this.attendance.filter(record => record.status === 'On Time').length;
+                return Math.round((onTimeCount / this.attendance.length) * 100);
+            }
+        }
+
+        class Admin extends User {
+            constructor(username, password) {
+                super(username, password, 'admin');
+                this.courses = [
+                    { id: 1, name: 'Computer Science', code: 'CS' },
+                    { id: 2, name: 'Business Administration', code: 'BA' },
+                    { id: 3, name: 'Electrical Engineering', code: 'EE' }
+                ];
+            }
+
+            addCourse(name, code) {
+                const newCourse = {
+                    id: this.courses.length + 1,
+                    name,
+                    code
+                };
+                this.courses.push(newCourse);
+                return newCourse;
+            }
+
+            getCourses() {
+                return this.courses;
+            }
+        }
+
+        class AttendanceSystem {
+            constructor() {
+                this.users = [
+                    new Student('student', 'password123', 'John Doe', 'S12345', 'CS', 2),
+                    new Admin('admin', 'admin123')
+                ];
+                this.currentUser = null;
+                this.initializeEventListeners();
+            }
+
+            initializeEventListeners() {
+                // Login form
+                document.getElementById('login-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleLogin();
+                });
+
+                // Logout button
+                document.getElementById('logout-btn').addEventListener('click', () => {
+                    this.handleLogout();
+                });
+
+                // Mark attendance button
+                document.getElementById('mark-attendance-btn').addEventListener('click', () => {
+                    this.markAttendance();
+                });
+
+                // Save course button
+                document.getElementById('save-course-btn').addEventListener('click', () => {
+                    this.addCourse();
+                });
+
+                // Filter changes
+                document.getElementById('course-filter').addEventListener('change', () => {
+                    this.filterAttendance();
+                });
+
+                document.getElementById('year-level-filter').addEventListener('change', () => {
+                    this.filterAttendance();
+                });
+
+                document.getElementById('date-filter').addEventListener('change', () => {
+                    this.filterAttendance();
+                });
+            }
+
+            handleLogin() {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                const role = document.getElementById('role').value;
+
+                const user = this.users.find(u => u.role === role && u.authenticate(username, password));
+
+                if (user) {
+                    this.currentUser = user;
+                    this.showSystemInterface();
+                } else {
+                    alert('Invalid credentials. Please try again.');
+                }
+            }
+
+            handleLogout() {
+                this.currentUser = null;
+                document.getElementById('system-interface').classList.add('d-none');
+                document.getElementById('login-screen').classList.remove('d-none');
+                document.getElementById('login-form').reset();
+            }
+
+            showSystemInterface() {
+                document.getElementById('login-screen').classList.add('d-none');
+                document.getElementById('system-interface').classList.remove('d-none');
+
+                // Update user info
+                document.getElementById('user-info').textContent = 
+                    this.currentUser.role === 'admin' ? 
+                    `Admin: ${this.currentUser.username}` : 
+                    `Student: ${this.currentUser.name} (${this.currentUser.course} - Year ${this.currentUser.yearLevel})`;
+
+                // Show appropriate dashboard
+                if (this.currentUser.role === 'admin') {
+                    document.getElementById('admin-dashboard').classList.remove('d-none');
+                    document.getElementById('student-dashboard').classList.add('d-none');
+                    this.loadCourses();
+                    this.loadAttendanceFilters();
+                    this.filterAttendance();
+                } else {
+                    document.getElementById('admin-dashboard').classList.add('d-none');
+                    document.getElementById('student-dashboard').classList.remove('d-none');
+                    this.loadStudentDashboard();
+                }
+            }
+
+            loadCourses() {
+                const coursesList = document.getElementById('courses-list');
+                coursesList.innerHTML = '';
+                
+                this.currentUser.getCourses().forEach(course => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${course.id}</td>
+                        <td>${course.name}</td>
+                        <td>${course.code}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </td>
+                    `;
+                    coursesList.appendChild(row);
+                });
+            }
+
+            loadAttendanceFilters() {
+                const courseFilter = document.getElementById('course-filter');
+                courseFilter.innerHTML = '<option value="">All Courses</option>';
+                
+                this.currentUser.getCourses().forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.code;
+                    option.textContent = course.name;
+                    courseFilter.appendChild(option);
+                });
+            }
+
+            filterAttendance() {
+                const courseFilter = document.getElementById('course-filter').value;
+                const yearLevelFilter = document.getElementById('year-level-filter').value;
+                const dateFilter = document.getElementById('date-filter').value;
+                
+                const attendanceList = document.getElementById('attendance-list');
+                attendanceList.innerHTML = '';
+                
+                // Get all student users
+                const students = this.users.filter(user => user instanceof Student);
+                
+                students.forEach(student => {
+                    // Apply filters
+                    if (courseFilter && student.course !== courseFilter) return;
+                    if (yearLevelFilter && student.yearLevel != yearLevelFilter) return;
+                    
+                    student.getAttendanceHistory().forEach(record => {
+                        if (dateFilter && record.date !== new Date(dateFilter).toLocaleDateString()) return;
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${student.studentId}</td>
+                            <td>${student.name}</td>
+                            <td>${student.course}</td>
+                            <td>Year ${student.yearLevel}</td>
+                            <td>${record.date}</td>
+                            <td>${record.time}</td>
+                            <td class="${record.status === 'On Time' ? 'status-on-time' : 'status-late'}">${record.status}</td>
+                        `;
+                        attendanceList.appendChild(row);
+                    });
+                });
+            }
+
+            addCourse() {
+                const name = document.getElementById('course-name').value;
+                const code = document.getElementById('course-code').value;
+                
+                if (!name || !code) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+                
+                this.currentUser.addCourse(name, code);
+                this.loadCourses();
+                this.loadAttendanceFilters();
+                
+                // Close modal and reset form
+                document.getElementById('add-course-form').reset();
+                bootstrap.Modal.getInstance(document.getElementById('addCourseModal')).hide();
+            }
+
+            markAttendance() {
+                const record = this.currentUser.markAttendance();
+                alert(`Attendance marked successfully at ${record.time} (${record.status})`);
+                this.loadStudentDashboard();
+            }
+
+            loadStudentDashboard() {
+                // Update stats
+                document.getElementById('total-attendance').textContent = this.currentUser.getTotalAttendance();
+                document.getElementById('on-time-percentage').textContent = `${this.currentUser.getOnTimePercentage()}%`;
+                
+                // Load attendance history
+                const attendanceList = document.getElementById('student-attendance-list');
+                attendanceList.innerHTML = '';
+                
+                this.currentUser.getAttendanceHistory().forEach(record => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${record.date}</td>
+                        <td>${record.time}</td>
+                        <td class="${record.status === 'On Time' ? 'status-on-time' : 'status-late'}">${record.status}</td>
+                    `;
+                    attendanceList.appendChild(row);
+                });
+            }
+        }
+
+        // Initialize the system when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const system = new AttendanceSystem();
+            
+            // Add some sample attendance records for demo
+            const student = system.users[0];
+            const today = new Date();
+            
+            // Add some past attendance records
+            const pastDate1 = new Date();
+            pastDate1.setDate(today.getDate() - 2);
+            student.markAttendance('08:45:00', pastDate1.toLocaleDateString());
+            
+            const pastDate2 = new Date();
+            pastDate2.setDate(today.getDate() - 3);
+            student.markAttendance('09:15:00', pastDate2.toLocaleDateString());
+            
+            const pastDate3 = new Date();
+            pastDate3.setDate(today.getDate() - 5);
+            student.markAttendance('08:30:00', pastDate3.toLocaleDateString());
+        });
+    </script>
+</body>
+</html>
